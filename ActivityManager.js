@@ -31,7 +31,8 @@ class ActivityManager {
 
         try {
             const response = await axios.get(this.csvPath, { responseType: 'text' });
-            const csvData = response.data;
+            const csvData = response.data.replaceAll('"""',"");
+            console.log(csvData);
             const lines = csvData.split('\n');
             const headers = lines[0].split(',');
 
@@ -64,39 +65,61 @@ class ActivityManager {
         };
 
         const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const current = this.toMinutes(currentHour, currentMinute);
+        const current = this.toMinutes(now.getHours(), now.getMinutes());
 
         for (let row of this.activities) {
-            let [start, end] = row["Time Slot"].split(/\s*-\s*/).map((time) => {
-                let plus12 = false;
-                time = time.trim();
-                if (time.includes('pm')) {
-                    plus12 = true;
+            let timeSlot = row["Time Slot"];
+            if (!timeSlot) {
+                console.error("Invalid Time Slot:", timeSlot);
+                continue;  // skip to next iteration if time slot is invalid
+            }
+
+            let [start, end] = timeSlot.split(/\s*-\s*/).map((time, index) => {
+                let parsedTime = this.parseTime(time);
+                if (!parsedTime) {
+                    console.error(`Invalid time format at index ${index}:`, time);
+                    return null;
                 }
-                time = time.replace(/am|pm/g, '');
-                let [hour, minute] = time.split(':');
-                hour = parseInt(hour) + (plus12 && (hour < 12) ? 12 : 0);
                 return {
-                    "inMins": this.toMinutes(hour, minute),
-                    "hours": hour,
-                    "minutes": minute,
+                    "inMins": this.toMinutes(parsedTime.hours, parsedTime.minutes),
+                    "hours": parsedTime.hours,
+                    "minutes": parsedTime.minutes,
                     "row": row
                 };
             });
+
+            if (!start || !end) continue;  // skip to next iteration if start or end time is invalid
+
             if (this.isTimeBetween(current, start.inMins, end.inMins)) {
                 potentialActivity = row;
                 break;  // break once you find the current activity
             }
         }
 
-        if (potentialActivity) {
+        if (potentialActivity["Activity"] !== "Loading...") {
             this.currentActivity = potentialActivity;
         }
 
         return potentialActivity;
     }
+
+    // Helper function to parse time and convert it to 24-hour format
+    parseTime(time) {
+        time = time.trim().toLowerCase();
+        let plus12 = time.includes('pm');
+        time = time.replace(/am|pm/g, '');
+        let [hourStr, minuteStr] = time.split(':');
+        let hour = parseInt(hourStr);
+        let minute = parseInt(minuteStr);
+
+        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 12 || minute < 0 || minute > 59) {
+            return null;  // return null for invalid time
+        }
+
+        hour = hour % 12 + (plus12 ? 12 : 0);  // Convert to 24-hour format
+        return { hours: hour, minutes: minute };
+    }
+
 }
 
 module.exports = ActivityManager;
