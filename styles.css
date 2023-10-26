@@ -1,0 +1,84 @@
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: transparent;  
+    color: #ffffff;
+    width: 300px;
+    height: 200px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 10px;
+    -webkit-app-region: drag;
+}
+
+h1, h2, p, blockquote {
+    margin: 0;
+    padding: 0;
+    border-radius: 5px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+h1 {
+    font-size: 18px;
+    background-color: #3a3a3a;
+    padding: 10px 0;
+    text-align: center;
+    border-bottom: 2px solid #555555;
+}
+
+h2 {
+    font-size: 16px;
+    background-color: #444444;
+    padding: 10px 15px;
+    margin-top: 8px;
+}
+
+p#description {
+    font-size: 14px;
+    padding: 7px 15px;
+    background-color: #333333;
+    margin-top: 8px;
+}
+
+blockquote {
+    font-size: 12px;
+    padding: 7px 15px;
+    background-color: #2a2a2a;
+    margin-top: 8px;
+    border-left: 4px solid #555555;
+    font-style: italic;
+}
+
+.box {
+    animation : blink 30s ease-in-out;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 0.3;
+        transform: scale(0.9);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    
+}
+
+/* Exclude elements from being draggable (e.g., buttons or other interactive elements) */
+button {
+    -webkit-app-region: no-drag;
+}
