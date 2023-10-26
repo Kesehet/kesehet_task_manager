@@ -5,7 +5,10 @@ const ActivityManager = require('./ActivityManager.js');
 const Notify = require('./Notify.js');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
-const csvPath = isDevelopment ? path.join(__dirname, 'resources', 'timetable.csv') : path.join(process.resourcesPath, 'timetable.csv');
+const csvPath = "https://raw.githubusercontent.com/Kesehet/kesehet_task_manager/main/resources/timetable.csv";
+const discordWebhookURL = "https://discord.com/api/webhooks/1166641316772450365/9n7WO67n2JweJ7uYz5hVYQFOWHp67fsldatnBoiymtZFxLx5En8HfuLPYAmEZ9uf1LbU";
+
+
 
 let currentActivity = {
     "Activity": "Loading...",
@@ -13,10 +16,12 @@ let currentActivity = {
     "Time Slot": "",
     "Motivational Quote": ""
 };
+
 let mainWindow = null; 
-
-
 const activityManager = new ActivityManager(csvPath);
+var notify = new Notify(discordWebhookURL);
+
+
 setInterval(() => {
     if (!mainWindow) {
         return;
@@ -24,12 +29,9 @@ setInterval(() => {
     activityManager.determineCurrentActivity()
     if(currentActivity !== activityManager.currentActivity && activityManager.currentActivity['Time Slot'] !== "") {
         mainWindow.webContents.send('activity-data', activityManager.currentActivity);
-        var notify = new Notify("https://discord.com/api/webhooks/1166641316772450365/9n7WO67n2JweJ7uYz5hVYQFOWHp67fsldatnBoiymtZFxLx5En8HfuLPYAmEZ9uf1LbU");
         notify.sendNotification(activityManager.currentActivity);
     }
     currentActivity = activityManager.currentActivity;
-
-        
 }, 5*1000);
 
 

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const csv = require('csv-parser');
+const axios = require('axios');
 
 class ActivityManager {
     constructor(csvPath) {
@@ -24,19 +25,34 @@ class ActivityManager {
         return current >= start && current <= end;
     }
 
-    readCSV(callback) {
+    
+    async readCSV(callback) {
         this.activities = [];
 
-        fs.createReadStream(this.csvPath)
-            .pipe(csv())
-            .on('data', (row) => {
-                this.activities.push(row);
-            })
-            .on('end', () => {
-                if (callback) {
-                    callback();
+        try {
+            const response = await axios.get(this.csvPath, { responseType: 'text' });
+            const csvData = response.data;
+            const lines = csvData.split('\n');
+            const headers = lines[0].split(',');
+
+            for (let i = 1; i < lines.length; i++) {
+                const data = lines[i].split(',');
+                const obj = {};
+                for (let j = 0; j < data.length; j++) {
+                    obj[headers[j]] = data[j];
                 }
-            });
+                this.activities.push(obj);
+            }
+
+            if (callback) {
+                callback();
+            }
+        } catch (error) {
+            console.error('Error fetching or parsing CSV:', error);
+            if (callback) {
+                callback(error);
+            }
+        }
     }
 
     determineCurrentActivity() {
